@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import { API_BASE_URL_GAMES, LOCALE, LANGUAGE, API_BASE_URL_PLUS } from '../consts'
+//import crawlerjs from 'crawler-js';
+
 //let TASKS = require('../tasks.data');
 
 export class GamesRouter {
@@ -20,7 +22,7 @@ export class GamesRouter {
    */
   public search(req: Request, res: Response, next: NextFunction) {
     let query = req.param('query');
-    //let urlBase = 'https://store.playstation.com/store/api/chihiro/00_09_000/tumbler/BR/pt/999/';
+
     let complementQuery = '?suggested_size=30&mode=game';
 
     if (!query) res.status(400).send({ status: false });
@@ -50,114 +52,82 @@ export class GamesRouter {
       });
   }
 
-  // /**
-  //  * GET one task by id
-  //  */
-  // public getOne(req: Request, res: Response, next: NextFunction) {
-  //     let query = parseInt(req.params.id);
-  //     let task = TASKS.find(task => task.id === query);
-  //     if (task) {
-  //         res.status(200)
-  //             .send({
-  //                 data: task,
-  //                 status: true,
-  //                 timestamp: new Date().getTime()
-  //             });
-  //     } else {
-  //         res.status(404)
-  //             .send({
-  //                 status: false
-  //             });
-  //     }
-  // }
-  //
-  // /**
-  //  * POST create one task
-  //  */
-  // public create(req: Request, res: Response, next: NextFunction) {
-  //
-  //     let newTask = req.body;
-  //     newTask.synchronized = ('synchronized' in newTask);
-  //     if (!newTask.id) { newTask.id = new Date().getTime(); }
-  //     TASKS.push(newTask);
-  //
-  //     res.status(201)
-  //         .send({
-  //             data: newTask,
-  //             status: res.status,
-  //             timestamp: new Date().getTime()
-  //         });
-  // }
-  //
-  // /**
-  //  * PUT update one task
-  //  */
-  // public update(req: Request, res: Response, next: NextFunction) {
-  //
-  //     // param and body
-  //     let taskId: number = parseInt(req.params.id);
-  //     let updatedTask = req.body;
-  //
-  //     // task in server
-  //     let serverTask = TASKS.find(task => task.id === taskId);
-  //
-  //     if (serverTask) {
-  //
-  //         // task id in server
-  //         let serverTaskId: number = TASKS.indexOf(serverTask);
-  //
-  //         // make sure the 'id' attribute is deleted
-  //         delete updatedTask.id;
-  //
-  //         // set the 'id' of updated task
-  //         updatedTask.id = taskId;
-  //
-  //         // update the array of tasks
-  //         TASKS.splice(serverTaskId, 1, updatedTask);
-  //
-  //         res.status(200)
-  //             .send({
-  //                 data: updatedTask,
-  //                 status: true,
-  //                 timestamp: new Date().getTime()
-  //             });
-  //
-  //     } else {
-  //         res.status(404)
-  //             .send({
-  //                 status: false
-  //             });
-  //     }
-  // }
-  //
-  // /**
-  //  * DELETE one task
-  //  */
-  // public delete(req: Request, res: Response, next: NextFunction) {
-  //     let taskId: number = parseInt(req.params.id);
-  //
-  //     if (TASKS.some(task => task.id === taskId)) {
-  //         TASKS = TASKS.filter(task => task.id !== taskId);
-  //         res.status(202)
-  //             .send({
-  //                 status: true
-  //             });
-  //     } else {
-  //         res.status(404)
-  //             .send({
-  //                 status: false
-  //             });
-  //     }
-  // }
+  public getTrophiesGamesList(req: Request, res: Response, next: NextFunction) {
 
-  /**
-   * Take each handler, and attach to one of the Express.Router's
-   * endpoints.
-   */
+    var crawlerjs = require('crawler-js');
+
+    var games = [];
+
+    crawlerjs({
+      interval: 100,
+      get: 'http://forum.mypst.com.br/index.php/topic/30296-%C3%8Dndice-de-guias-de-trof%C3%A9us-ps4/',
+      encodeget: false,
+      preview: 0,
+      extractors: [
+        {
+          selector: 'a',
+          callback: function (err, html, url, response) {
+            if (!err) {
+              let data: { url: string, game: string } = { url: '', game: '' };
+
+              data.url = html.attr('href');
+              data.game = html.text();
+              if (
+                data &&
+                data.url !== "#" &&
+                data.game !== '' &&
+                data.url.indexOf("user") == -1 &&
+                data.url.indexOf("privacypolicy") == -1 &&
+                data.url.indexOf("forum/67-ps4") == -1 &&
+                data.url.indexOf("79-guia") == -1 &&
+                data.url.indexOf("profile") == -1 &&
+                data.url.indexOf("page-") == -1 &&
+                data.url.indexOf("?app=forums") == -1 &&
+                data.url.indexOf("?app=core") == -1 &&
+                data.url.indexOf("apps/board") == -1 &&
+                data.url.indexOf("?showtopic") == -1 &&
+                data.url.indexOf("apps/board") == -1 &&
+                data.game.indexOf("Curtir") == -1 &&
+                data.game.indexOf("Descurtir") == -1 &&
+                data.game.indexOf("topo") == -1 &&
+                data.game.indexOf("http") == -1 &&
+                data.game.indexOf("RECOMENDAÇÕES") == -1 &&
+                data.game.indexOf("aqui") == -1 &&
+                data.game !== "Link" &&
+                data.game !== "myPSt" &&
+                data.game !== " myPSt " &&
+                data.game !== "Fórum" &&
+                data.game !== "Membros" &&
+                data.game !== "Portal" &&
+                data.game !== "cliquem aqui" &&
+                data.game !== "Ir para conteúdo" &&
+                data.url.indexOf("/rank") == -1 &&
+                data.url.indexOf("apps/board") == -1 &&
+                data.url.indexOf("entry") == -1
+              ) {
+                games.push(data);
+              }
+
+            } else {
+              res.send(err);
+            }
+          }
+        }
+      ]
+    }, {});
+
+    setTimeout(() => {
+      res.send(games.sort(function (a, b) {
+        if (a.game > b.game) return 1;
+      }));
+    }, 5000)
+  }
+
+
   init() {
-    console.log('chegou aqui no init');
     this.router.get('/search/:query', this.search);
     this.router.get('/psn', this.getPSNFreeGames);
+    this.router.get('/trophies', this.getTrophiesGamesList);
     // this.router.get('/:id', this.getOne);
     // this.router.post('/', this.create);
     // this.router.put('/:id', this.update);
